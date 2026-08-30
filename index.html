@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDFify — Convert Anything to PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #ffffff;
+    --bg-soft: #fafafa;
+    --text: #14121a;
+    --text-soft: #6b6875;
+    --border: #ececee;
+    --card: #ffffff;
+    --red: #e0342c;
+    --red-dark: #c22a23;
+    --red-soft: #fdeceb;
+    --shadow: 0 10px 30px rgba(20,18,26,0.06);
+    --font-en: 'Plus Jakarta Sans', sans-serif;
+    --font-ar: 'Cairo', sans-serif;
+  }
+  [data-theme="dark"]{
+    --bg: #121014;
+    --bg-soft: #1a171d;
+    --text: #f5f4f7;
+    --text-soft: #a7a3ae;
+    --border: #2a262e;
+    --card: #1a171d;
+    --red-soft: #2b1917;
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family: var(--font-en);
+    background: var(--bg);
+    color: var(--text);
+    transition: background .3s ease, color .3s ease;
+    overflow-x:hidden;
+  }
+  html[dir="rtl"] body{ font-family: var(--font-ar); }
+  a{text-decoration:none; color:inherit;}
+  button{font-family:inherit; cursor:pointer; border:none;}
+  .wrap{max-width:1200px; margin:0 auto; padding:0 32px;}
+
+  /* NAVBAR */
+  header{
+    border-bottom:1px solid var(--border);
+    position: sticky; top:0; background:var(--bg); z-index:50;
+  }
+  nav.wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height:76px;
+  }
+  .logo{display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px;}
+  .logo-badge{
+    width:38px; height:38px; border-radius:10px; background:var(--red);
+    display:flex; align-items:center; justify-content:center; color:#fff;
+    font-size:18px; transform: rotate(-4deg);
+  }
+  .nav-links{display:flex; gap:36px; font-weight:600; font-size:15px; color:var(--text-soft);}
+  .nav-links a{position:relative; padding-bottom:4px; transition:color .2s;}
+  .nav-links a:hover{color:var(--text);}
+  .nav-links a.active{color:var(--text);}
+  .nav-links a.active::after{
+    content:""; position:absolute; left:0; right:0; bottom:-4px; height:2px; background:var(--red);
+  }
+  .nav-right{display:flex; align-items:center; gap:12px;}
+  .icon-btn{
+    width:40px; height:40px; border-radius:50%; background:var(--bg-soft);
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+    border:1px solid var(--border); transition: transform .2s ease;
+  }
+  .icon-btn:hover{ transform: scale(1.06); }
+  .lang-btn{
+    height:40px; padding:0 16px; border-radius:20px; background:var(--bg-soft);
+    border:1px solid var(--border); font-weight:700; font-size:13px; letter-spacing:.3px;
+    display:flex; align-items:center; gap:6px; color:var(--text);
+  }
+  .btn-primary{
+    background:var(--red); color:#fff; font-weight:700; font-size:14px;
+    padding:0 22px; height:42px; border-radius:10px;
+    box-shadow: 0 8px 18px rgba(224,52,44,0.28);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-primary:hover{ transform: translateY(-2px); box-shadow:0 12px 22px rgba(224,52,44,0.35); }
+
+  /* HERO */
+  .hero{
+    position:relative;
+    padding:88px 0 70px;
+    overflow:hidden;
+  }
+  .hero-grid{
+    display:grid; grid-template-columns: 1.05fr 0.95fr; gap:40px; align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; background:var(--red-soft); color:var(--red-dark);
+    font-weight:700; font-size:12.5px; padding:6px 14px; border-radius:20px; margin-bottom:22px;
+  }
+  [data-theme="dark"] .eyebrow{ color:#ff9d97; }
+  h1{
+    font-size:56px; line-height:1.05; font-weight:800; letter-spacing:-1.2px;
+  }
+  h1 .accent{color:var(--red);}
+  .hero p.sub{
+    margin-top:20px; font-size:17px; color:var(--text-soft); max-width:480px; line-height:1.6;
+  }
+
+  .dropzone{
+    margin-top:32px; border:2px dashed var(--border); border-radius:18px;
+    padding:40px 28px; text-align:center; background:var(--bg-soft);
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .dropzone.drag{ border-color:var(--red); background:var(--red-soft); }
+  .drop-icon{
+    width:56px; height:56px; border-radius:14px; background:var(--red); color:#fff;
+    display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:22px;
+  }
+  .drop-title{font-weight:700; font-size:16px;}
+  .drop-or{color:var(--text-soft); font-size:13px; margin:10px 0;}
+  .choose-btn{
+    background:var(--red); color:#fff; font-weight:700; font-size:14px;
+    padding:11px 26px; border-radius:10px; box-shadow:0 8px 18px rgba(224,52,44,0.25);
+  }
+  .support-line{margin-top:14px; font-size:12.5px; color:var(--text-soft);}
+  #fileInput{display:none;}
+
+  .filelist{margin-top:18px; text-align:left; display:flex; flex-direction:column; gap:8px;}
+  html[dir="rtl"] .filelist{ text-align:right; }
+  .file-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 14px; font-size:13.5px;
+  }
+  .file-row .fname{display:flex; align-items:center; gap:8px; overflow:hidden;}
+  .file-row .fname span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:220px;}
+  .file-tag{font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;}
+  .tag-ok{background:#e6f6ec; color:#1e8e4a;}
+  .tag-no{background:#fdecec; color:#c0392b;}
+  [data-theme="dark"] .tag-ok{background:#123a24; color:#5fd889;}
+  [data-theme="dark"] .tag-no{background:#3a1414; color:#ff8a80;}
+  .remove-x{color:var(--text-soft); font-size:16px; line-height:1;}
+
+  .convert-row{margin-top:16px; display:flex; gap:12px; align-items:center;}
+  .convert-btn{
+    background:var(--text); color:var(--bg); font-weight:700; font-size:14px;
+    padding:12px 24px; border-radius:10px; opacity:.4; pointer-events:none; transition: opacity .2s;
+  }
+  .convert-btn.active{opacity:1; pointer-events:auto;}
+  .status-text{font-size:13px; color:var(--text-soft);}
+
+  /* hero visual */
+  .hero-visual{position:relative; height:440px;}
+  .blob{
+    position:absolute; inset:0; margin:auto; width:92%; height:88%;
+    background: radial-gradient(circle at 30% 30%, var(--red-soft), transparent 60%);
+    border-radius: 45% 55% 60% 40% / 50% 45% 55% 50%;
+  }
+  .card-doc, .card-pdf{
+    position:absolute; border-radius:16px; box-shadow:var(--shadow);
+  }
+  .card-doc{
+    left:6%; top:18%; width:210px; padding:22px; background:var(--card); border:1px solid var(--border);
+  }
+  .card-doc h4{font-size:15px; margin-bottom:14px;}
+  .doc-icon{width:34px; height:34px; border-radius:8px; background:#6a5cff; margin-bottom:10px;}
+  .doc-line{height:7px; border-radius:4px; background:var(--border); margin-bottom:8px;}
+  .card-pdf{
+    right:4%; top:38%; width:150px; height:190px; background:var(--red);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; gap:10px;
+  }
+  .card-pdf .pdf-label{font-weight:800; font-size:14px; letter-spacing:1px;}
+  .arrow-circle{
+    position:absolute; left:50%; top:52%; transform:translate(-50%,-50%);
+    width:52px; height:52px; border-radius:50%; background:var(--bg); box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+  }
+  html[dir="rtl"] .arrow-circle{ transform: translate(-50%,-50%) scaleX(-1); }
+
+  /* FEATURES */
+  .features{
+    border-top:1px solid var(--border); padding:56px 0; background:var(--bg-soft);
+  }
+  .feat-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:28px;
+  }
+  .feat{display:flex; gap:14px; align-items:flex-start;}
+  .feat-icon{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:18px;
+  }
+  .feat h4{font-size:15px; margin-bottom:4px;}
+  .feat p{font-size:13.5px; color:var(--text-soft); line-height:1.5;}
+
+  footer{padding:26px 0; text-align:center; color:var(--text-soft); font-size:13px;}
+
+  @media (max-width: 900px){
+    .hero-grid{grid-template-columns:1fr;}
+    .hero-visual{display:none;}
+    h1{font-size:38px;}
+    .nav-links{display:none;}
+    .feat-grid{grid-template-columns:repeat(2,1fr); row-gap:26px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <div class="logo">
+      <div class="logo-badge">📄</div>
+      <span data-i18n="brand">PDFify</span>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeToggle" title="Dark mode">🌙</button>
+      <button class="lang-btn" id="langToggle">🌐 <span id="langLabel">العربية</span></button>
+      <button class="btn-primary" id="getStartedBtn" data-i18n="get_started">Get Started</button>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">⚡ <span data-i18n="eyebrow">100% in your browser — no upload needed</span></span>
+      <h1>
+        <span data-i18n="h1_1">Convert Anything</span><br>
+        <span data-i18n="h1_2">to</span> <span class="accent" data-i18n="h1_pdf">PDF</span>
+      </h1>
+      <p class="sub" data-i18n="hero_sub">Convert your files to high-quality PDF documents quickly, easily, and securely — right on your own device.</p>
+
+      <div class="dropzone" id="dropzone">
+        <div class="drop-icon">⬆</div>
+        <div class="drop-title" data-i18n="drop_title">Drag &amp; drop your file here</div>
+        <div class="drop-or" data-i18n="drop_or">or</div>
+        <button class="choose-btn" id="chooseBtn" data-i18n="choose_file">Choose File</button>
+        <input type="file" id="fileInput" multiple accept="image/*,.txt">
+        <div class="support-line" data-i18n="support_line">Supports: Images (JPG, PNG, WEBP) &amp; plain text (.txt) — converted fully in your browser</div>
+
+        <div class="filelist" id="fileList"></div>
+
+        <div class="convert-row">
+          <button class="convert-btn" id="convertBtn" data-i18n="convert_btn">Convert to PDF</button>
+          <span class="status-text" id="statusText"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="blob"></div>
+      <div class="card-doc">
+        <h4 data-i18n="any_file">Any File</h4>
+        <div class="doc-icon"></div>
+        <div class="doc-line" style="width:90%"></div>
+        <div class="doc-line" style="width:70%"></div>
+        <div class="doc-line" style="width:80%"></div>
+        <div class="doc-line" style="width:55%"></div>
+      </div>
+      <div class="arrow-circle">→</div>
+      <div class="card-pdf">
+        <div style="font-size:34px;">📕</div>
+        <div class="pdf-label">PDF</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="wrap feat-grid">
+    <div class="feat">
+      <div class="feat-icon" style="background:#fde8e8; color:#c0392b;">🔒</div>
+      <div>
+        <h4 data-i18n="f1_title">Secure</h4>
+        <p data-i18n="f1_desc">Your files never leave your device — everything happens locally.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:#e6f6ec; color:#1e8e4a;">⚡</div>
+      <div>
+        <h4 data-i18n="f2_title">Fast</h4>
+        <p data-i18n="f2_desc">Convert files in seconds — no waiting on a server.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:#ece6fb; color:#6a3fd1;">🏅</div>
+      <div>
+        <h4 data-i18n="f3_title">High Quality</h4>
+        <p data-i18n="f3_desc">Get sharp, high-quality PDFs every single time.</p>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:#e6f0fb; color:#2160c4;">📱</div>
+      <div>
+        <h4 data-i18n="f4_title">All Devices</h4>
+        <p data-i18n="f4_desc">Works on any device, anytime, anywhere — right in the browser.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer data-i18n="footer">© 2026 PDFify. Built for learning &amp; personal projects.</footer>
+
+<script>
+/* ================= i18n ================= */
+const translations = {
+  en: {
+    page_title:"PDFify — Convert Anything to PDF",
+    brand:"PDFify",
+    get_started:"Get Started", eyebrow:"100% in your browser — no upload needed",
+    h1_1:"Convert Anything", h1_2:"to", h1_pdf:"PDF",
+    hero_sub:"Convert your files to high-quality PDF documents quickly, easily, and securely — right on your own device.",
+    drop_title:"Drag & drop your file here", drop_or:"or", choose_file:"Choose File",
+    support_line:"Supports: Images (JPG, PNG, WEBP) & plain text (.txt) — converted fully in your browser",
+    convert_btn:"Convert to PDF", any_file:"Any File",
+    f1_title:"Secure", f1_desc:"Your files never leave your device — everything happens locally.",
+    f2_title:"Fast", f2_desc:"Convert files in seconds — no waiting on a server.",
+    f3_title:"High Quality", f3_desc:"Get sharp, high-quality PDFs every single time.",
+    f4_title:"All Devices", f4_desc:"Works on any device, anytime, anywhere — right in the browser.",
+    footer:"© 2026 PDFify. Built for learning & personal projects.",
+    lang_label:"العربية",
+    status_idle:"", status_ready:f=>`${f} file(s) ready`,
+    status_converting:"Converting...", status_done:"Done! PDF downloaded.",
+    unsupported:"This file type can't be converted in the browser (needs a server).",
+    tag_ok:"PDF ✓", tag_na:"N/A",
+  },
+  ar: {
+    page_title:"PDFify — حوّل أي ملف إلى PDF",
+    brand:"PDFify",
+    get_started:"ابدأ الآن", eyebrow:"100% داخل متصفحك — بلا رفع لأي سيرفر",
+    h1_1:"حوّل أي ملف", h1_2:"إلى", h1_pdf:"PDF",
+    hero_sub:"حوّل ملفاتك إلى مستندات PDF عالية الجودة، بسرعة وسهولة وأمان — مباشرة من جهازك.",
+    drop_title:"اسحب وأفلت ملفك هنا", drop_or:"أو", choose_file:"اختر ملف",
+    support_line:"يدعم: الصور (JPG, PNG, WEBP) وملفات نصية (.txt) — يتم التحويل بالكامل داخل متصفحك",
+    convert_btn:"حوّل إلى PDF", any_file:"أي ملف",
+    f1_title:"آمن", f1_desc:"ملفاتك لا تغادر جهازك أبدا — كل شيء يتم محليا.",
+    f2_title:"سريع", f2_desc:"حوّل ملفاتك في ثوان — بلا انتظار لأي سيرفر.",
+    f3_title:"جودة عالية", f3_desc:"احصل على ملفات PDF واضحة وعالية الجودة في كل مرة.",
+    f4_title:"كل الأجهزة", f4_desc:"يعمل على أي جهاز، في أي وقت ومكان — مباشرة من المتصفح.",
+    footer:"© 2026 PDFify. تم إنشاؤه لأغراض تعليمية ومشاريع شخصية.",
+    lang_label:"English",
+    status_idle:"", status_ready:f=>`${f} ملف(ات) جاهزة`,
+    status_converting:"جاري التحويل...", status_done:"تم! تم تحميل ملف PDF.",
+    unsupported:"لا يمكن تحويل هذا النوع من الملفات داخل المتصفح (يحتاج سيرفر).",
+    tag_ok:"PDF ✓", tag_na:"غير مدعوم",
+  }
+};
+let currentLang = "en";
+
+function applyLang(lang){
+  currentLang = lang;
+  const dict = translations[lang];
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const key = el.getAttribute("data-i18n");
+    if(dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  document.getElementById("langLabel").textContent = dict.lang_label;
+  document.documentElement.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
+  document.documentElement.setAttribute("lang", lang);
+  document.title = dict.page_title;
+  renderFileList();
+}
+
+document.getElementById("langToggle").addEventListener("click", ()=>{
+  applyLang(currentLang === "en" ? "ar" : "en");
+});
+
+document.getElementById("getStartedBtn").addEventListener("click", ()=>{
+  dropzone.scrollIntoView({ behavior:"smooth", block:"center" });
+});
+
+/* ================= Theme ================= */
+const themeBtn = document.getElementById("themeToggle");
+themeBtn.addEventListener("click", ()=>{
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  themeBtn.textContent = isDark ? "🌙" : "☀️";
+});
+
+/* ================= File handling ================= */
+const dropzone = document.getElementById("dropzone");
+const fileInput = document.getElementById("fileInput");
+const chooseBtn = document.getElementById("chooseBtn");
+const fileListEl = document.getElementById("fileList");
+const convertBtn = document.getElementById("convertBtn");
+const statusText = document.getElementById("statusText");
+
+let selectedFiles = [];
+
+const SUPPORTED_IMAGE = ["image/jpeg","image/png","image/webp","image/gif"];
+const SUPPORTED_TEXT = ["text/plain"];
+
+function isSupported(file){
+  return SUPPORTED_IMAGE.includes(file.type) || SUPPORTED_TEXT.includes(file.type) || file.name.endsWith(".txt");
+}
+
+chooseBtn.addEventListener("click", ()=> fileInput.click());
+
+fileInput.addEventListener("change", e=>{
+  addFiles(e.target.files);
+  fileInput.value = "";
+});
+
+["dragenter","dragover"].forEach(evt=>{
+  dropzone.addEventListener(evt, e=>{
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.add("drag");
+  });
+});
+["dragleave","drop"].forEach(evt=>{
+  dropzone.addEventListener(evt, e=>{
+    e.preventDefault(); e.stopPropagation();
+    dropzone.classList.remove("drag");
+  });
+});
+dropzone.addEventListener("drop", e=>{
+  addFiles(e.dataTransfer.files);
+});
+
+function addFiles(fileArray){
+  Array.from(fileArray).forEach(f => selectedFiles.push(f));
+  renderFileList();
+}
+
+function removeFile(index){
+  selectedFiles.splice(index,1);
+  renderFileList();
+}
+
+function renderFileList(){
+  fileListEl.innerHTML = "";
+  const dict = translations[currentLang];
+  selectedFiles.forEach((f,i)=>{
+    const ok = isSupported(f);
+    const row = document.createElement("div");
+    row.className = "file-row";
+    row.innerHTML = `
+      <div class="fname">📄 <span>${f.name}</span></div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="file-tag ${ok ? "tag-ok" : "tag-no"}">${ok ? dict.tag_ok : dict.tag_na}</span>
+        <span class="remove-x" data-idx="${i}">✕</span>
+      </div>
+    `;
+    fileListEl.appendChild(row);
+  });
+  fileListEl.querySelectorAll(".remove-x").forEach(el=>{
+    el.addEventListener("click", ()=> removeFile(parseInt(el.getAttribute("data-idx"))));
+  });
+
+  const hasSupported = selectedFiles.some(isSupported);
+  convertBtn.classList.toggle("active", hasSupported);
+  statusText.textContent = selectedFiles.length ? dict.status_ready(selectedFiles.length) : dict.status_idle;
+}
+
+convertBtn.addEventListener("click", async ()=>{
+  const dict = translations[currentLang];
+  const usable = selectedFiles.filter(isSupported);
+  if(!usable.length) return;
+
+  statusText.textContent = dict.status_converting;
+  convertBtn.classList.remove("active");
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: "pt", format: "a4" });
+  let firstPage = true;
+
+  for(const file of usable){
+    if(!firstPage) pdf.addPage();
+    firstPage = false;
+
+    if(SUPPORTED_IMAGE.includes(file.type)){
+      const dataUrl = await readFileAsDataURL(file);
+      const img = await loadImage(dataUrl);
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const ratio = Math.min(pageW / img.width, pageH / img.height);
+      const w = img.width * ratio;
+      const h = img.height * ratio;
+      const x = (pageW - w) / 2;
+      const y = (pageH - h) / 2;
+      pdf.addImage(dataUrl, "JPEG", x, y, w, h);
+    } else {
+      const text = await file.text();
+      const lines = pdf.splitTextToSize(text, 500);
+      pdf.setFontSize(11);
+      pdf.text(lines, 40, 50);
+    }
+  }
+
+  pdf.save("converted.pdf");
+  statusText.textContent = dict.status_done;
+  convertBtn.classList.add("active");
+});
+
+function readFileAsDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+</script>
+
+</body>
+</html>
