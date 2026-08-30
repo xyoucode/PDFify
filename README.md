@@ -1,9 +1,12 @@
+
 # 📄 PDFify
 
 A clean, client-side web app that converts files to PDF — entirely in your browser. No backend, no file uploads to a server, no privacy concerns. Built with plain HTML, CSS, and JavaScript.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
+
+<img width="1280" height="853" alt="PDF" src="https://github.com/user-attachments/assets/e944b853-ffd5-48d4-93dc-0a65576d7b3e" />
 
 ## -- Features
 
