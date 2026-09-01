@@ -1,24 +1,33 @@
-
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PDFify — Convert Anything to PDF</title>
+<title>PDFify — 100% Private, Client-Side PDF Converter</title>
+
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem("pdfify-theme");
+    var theme = saved || ((window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  }catch(e){}
+})();
+</script>
 
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <!-- Social share preview (WhatsApp, Twitter/X, Discord, Facebook...) -->
-<meta property="og:title" content="PDFify — Convert Anything to PDF">
-<meta property="og:description" content="Convert images & text files to PDF directly in your browser. No backend, 100% private.">
+<meta property="og:title" content="PDFify — 100% Private, Client-Side PDF Converter">
+<meta property="og:description" content="Convert images & text files to PDF directly in your browser. No backend, no uploads, 100% private.">
 <meta property="og:image" content="https://xyoucode.github.io/PDFify/preview.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://xyoucode.github.io/PDFify/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="PDFify — Convert Anything to PDF">
-<meta name="twitter:description" content="Convert images & text files to PDF directly in your browser. No backend, 100% private.">
+<meta name="twitter:title" content="PDFify — 100% Private, Client-Side PDF Converter">
+<meta name="twitter:description" content="Convert images & text files to PDF directly in your browser. No backend, no uploads, 100% private.">
 <meta name="twitter:image" content="https://xyoucode.github.io/PDFify/preview.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -84,6 +93,18 @@
     content:""; position:absolute; left:0; right:0; bottom:-4px; height:2px; background:var(--red);
   }
   .nav-right{display:flex; align-items:center; gap:12px;}
+  .hamburger{
+    display:none; width:42px; height:42px; border-radius:10px; background:var(--bg-soft);
+    border:1px solid var(--border); align-items:center; justify-content:center; font-size:20px;
+  }
+  .mobile-panel{
+    display:none; position:absolute; top:76px; left:0; right:0; background:var(--bg);
+    border-bottom:1px solid var(--border); padding:18px 32px; flex-direction:column; gap:14px;
+    box-shadow: var(--shadow); z-index:60;
+  }
+  .mobile-panel.open{display:flex;}
+  .mobile-panel .row{display:flex; align-items:center; justify-content:space-between;}
+  .mobile-panel .btn-primary{width:100%; justify-content:center;}
   .icon-btn{
     width:40px; height:40px; border-radius:50%; background:var(--bg-soft);
     display:flex; align-items:center; justify-content:center; font-size:16px;
@@ -95,20 +116,53 @@
     border:1px solid var(--border); font-weight:700; font-size:13px; letter-spacing:.3px;
     display:flex; align-items:center; gap:6px; color:var(--text);
   }
+  .lang-wrap{ position:relative; }
+  .lang-menu{
+    display:none; position:absolute; top:48px; right:0; min-width:170px;
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    box-shadow:var(--shadow); padding:6px; z-index:80; max-height:320px; overflow-y:auto;
+  }
+  html[dir="rtl"] .lang-menu{ right:auto; left:0; }
+  .lang-menu.open{ display:block; }
+  .lang-option{
+    display:flex; align-items:center; justify-content:space-between; width:100%;
+    padding:9px 12px; border-radius:8px; font-size:13.5px; font-weight:600; color:var(--text);
+    background:transparent; text-align:left;
+  }
+  html[dir="rtl"] .lang-option{ text-align:right; }
+  .lang-option:hover{ background:var(--bg-soft); }
+  .lang-option.active{ color:var(--red); background:var(--red-soft); }
+  .lang-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:70;
+  }
+  .lang-overlay.open{ display:block; }
+  @media (max-width:640px){
+    .lang-menu{
+      position:fixed; top:50%; left:50%; right:auto;
+      transform:translate(-50%,-50%); width:260px; max-height:70vh;
+    }
+  }
   .btn-primary{
     background:var(--red); color:#fff; font-weight:700; font-size:14px;
     padding:0 22px; height:42px; border-radius:10px;
     box-shadow: 0 8px 18px rgba(224,52,44,0.28);
     transition: transform .15s ease, box-shadow .15s ease;
+    display:inline-flex; align-items:center; justify-content:center;
   }
   .btn-primary:hover{ transform: translateY(-2px); box-shadow:0 12px 22px rgba(224,52,44,0.35); }
 
   /* HERO */
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
   .hero{
     position:relative;
     padding:88px 0 70px;
     overflow:hidden;
   }
+  .hero-grid > div{ animation: fadeUp .6s ease both; }
+  .hero-grid > div:nth-child(2){ animation-delay:.12s; }
   .hero-grid{
     display:grid; grid-template-columns: 1.05fr 0.95fr; gap:40px; align-items:center;
   }
@@ -142,6 +196,10 @@
     padding:11px 26px; border-radius:10px; box-shadow:0 8px 18px rgba(224,52,44,0.25);
   }
   .support-line{margin-top:14px; font-size:12.5px; color:var(--text-soft);}
+  .privacy-note{
+    margin-top:10px; font-size:11.5px; color:var(--text-soft);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
   #fileInput{display:none;}
 
   .filelist{margin-top:18px; text-align:left; display:flex; flex-direction:column; gap:8px;}
@@ -200,9 +258,14 @@
     border-top:1px solid var(--border); padding:56px 0; background:var(--bg-soft);
   }
   .feat-grid{
-    display:grid; grid-template-columns:repeat(4,1fr); gap:28px;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:22px;
   }
-  .feat{display:flex; gap:14px; align-items:flex-start;}
+  .feat{
+    display:flex; gap:14px; align-items:flex-start;
+    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  .feat:hover{ transform:translateY(-4px); box-shadow:var(--shadow); border-color:transparent; }
   .feat-icon{
     width:44px; height:44px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center; font-size:18px;
@@ -214,10 +277,20 @@
 
   @media (max-width: 900px){
     .hero-grid{grid-template-columns:1fr;}
-    .hero-visual{display:none;}
     h1{font-size:38px;}
     .nav-links{display:none;}
-    .feat-grid{grid-template-columns:repeat(2,1fr); row-gap:26px;}
+    .feat-grid{grid-template-columns:repeat(2,1fr); row-gap:18px;}
+    .hero-visual{ height:260px; transform:scale(.85); margin-top:-20px; }
+  }
+
+  @media (max-width: 640px){
+    .wrap{padding:0 20px;}
+    .nav-right > .icon-btn, .nav-right > .lang-btn, .nav-right > .btn-primary{ display:none; }
+    .hamburger{ display:flex; }
+    h1{font-size:32px;}
+    .dropzone{padding:28px 18px;}
+    .feat-grid{grid-template-columns:1fr;}
+    .hero-visual{ height:200px; transform:scale(.68); margin-top:-50px; }
   }
 </style>
 </head>
@@ -231,16 +304,32 @@
     </div>
     <div class="nav-right">
       <button class="icon-btn" id="themeToggle" title="Dark mode">🌙</button>
-      <button class="lang-btn" id="langToggle">🌐 <span id="langLabel">العربية</span></button>
+      <div class="lang-wrap">
+        <button class="lang-btn" id="langToggle">🌐 <span id="langLabel">العربية</span> ▾</button>
+      </div>
       <button class="btn-primary" id="getStartedBtn" data-i18n="get_started">Get Started</button>
+      <button class="hamburger" id="hamburgerBtn" aria-label="Menu">☰</button>
     </div>
   </nav>
+  <div class="lang-overlay" id="langOverlay"></div>
+  <div class="lang-menu" id="langMenu"></div>
+  <div class="mobile-panel" id="mobilePanel">
+    <div class="row">
+      <span data-i18n="menu_theme">Theme</span>
+      <button class="icon-btn" id="themeToggleMobile" title="Dark mode">🌙</button>
+    </div>
+    <div class="row">
+      <span data-i18n="menu_language">Language</span>
+      <button class="lang-btn" id="langToggleMobile">🌐 <span id="langLabelMobile">العربية</span> ▾</button>
+    </div>
+    <button class="btn-primary" id="getStartedBtnMobile" data-i18n="get_started">Get Started</button>
+  </div>
 </header>
 
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow">⚡ <span data-i18n="eyebrow">100% in your browser — no upload needed</span></span>
+      <span class="eyebrow">🔒 <span data-i18n="eyebrow">100% in your browser — no upload needed</span></span>
       <h1>
         <span data-i18n="h1_1">Convert Anything</span><br>
         <span data-i18n="h1_2">to</span> <span class="accent" data-i18n="h1_pdf">PDF</span>
@@ -252,8 +341,10 @@
         <div class="drop-title" data-i18n="drop_title">Drag &amp; drop your file here</div>
         <div class="drop-or" data-i18n="drop_or">or</div>
         <button class="choose-btn" id="chooseBtn" data-i18n="choose_file">Choose File</button>
+        <div class="privacy-note">🔒 <span data-i18n="privacy_note">Your files are processed locally via JS and never sent to any server.</span></div>
         <input type="file" id="fileInput" multiple accept="image/*,.txt">
         <div class="support-line" data-i18n="support_line">Supports: Images (JPG, PNG, WEBP) &amp; plain text (.txt) — converted fully in your browser</div>
+        <div class="privacy-note" data-i18n="privacy_note">🔒 Your files are processed locally and never sent to any server.</div>
 
         <div class="filelist" id="fileList"></div>
 
@@ -322,24 +413,158 @@
 /* ================= i18n ================= */
 const translations = {
   en: {
-    page_title:"PDFify — Convert Anything to PDF",
+    page_title:"PDFify — 100% Private, Client-Side PDF Converter",
     brand:"PDFify",
-    get_started:"Get Started", eyebrow:"100% in your browser — no upload needed",
+    get_started:"Get Started", eyebrow:"100% Private, Client-Side PDF Converter",
     h1_1:"Convert Anything", h1_2:"to", h1_pdf:"PDF",
     hero_sub:"Convert your files to high-quality PDF documents quickly, easily, and securely — right on your own device.",
     drop_title:"Drag & drop your file here", drop_or:"or", choose_file:"Choose File",
     support_line:"Supports: Images (JPG, PNG, WEBP) & plain text (.txt) — converted fully in your browser",
+    privacy_note:"🔒 Your files are processed locally via JS and never sent to any server.",
     convert_btn:"Convert to PDF", any_file:"Any File",
     f1_title:"Secure", f1_desc:"Your files never leave your device — everything happens locally.",
     f2_title:"Fast", f2_desc:"Convert files in seconds — no waiting on a server.",
     f3_title:"High Quality", f3_desc:"Get sharp, high-quality PDFs every single time.",
     f4_title:"All Devices", f4_desc:"Works on any device, anytime, anywhere — right in the browser.",
     footer:"© 2026 PDFify. Built for learning & personal projects.",
-    lang_label:"العربية",
+    lang_label:"English",
     status_idle:"", status_ready:f=>`${f} file(s) ready`,
     status_converting:"Converting...", status_done:"Done! PDF downloaded.",
     unsupported:"This file type can't be converted in the browser (needs a server).",
     tag_ok:"PDF ✓", tag_na:"N/A",
+    menu_theme:"Theme", menu_language:"Language",
+  },
+  fr: {
+    page_title:"PDFify — Convertisseur PDF 100% privé, local",
+    brand:"PDFify",
+    get_started:"Commencer", eyebrow:"100% privé — convertisseur PDF local",
+    h1_1:"Convertissez tout", h1_2:"en", h1_pdf:"PDF",
+    hero_sub:"Convertissez vos fichiers en documents PDF de haute qualité, rapidement et en toute sécurité — directement sur votre appareil.",
+    drop_title:"Glissez-déposez votre fichier ici", drop_or:"ou", choose_file:"Choisir un fichier",
+    support_line:"Compatible : Images (JPG, PNG, WEBP) et texte brut (.txt) — converti entièrement dans votre navigateur",
+    privacy_note:"🔒 Vos fichiers sont traités localement via JS et ne sont jamais envoyés à un serveur.",
+    convert_btn:"Convertir en PDF", any_file:"N'importe quel fichier",
+    f1_title:"Sécurisé", f1_desc:"Vos fichiers ne quittent jamais votre appareil — tout se passe localement.",
+    f2_title:"Rapide", f2_desc:"Convertissez vos fichiers en quelques secondes — sans attendre un serveur.",
+    f3_title:"Haute qualité", f3_desc:"Obtenez des PDF nets et de haute qualité à chaque fois.",
+    f4_title:"Tous les appareils", f4_desc:"Fonctionne sur n'importe quel appareil, à tout moment — directement dans le navigateur.",
+    footer:"© 2026 PDFify. Créé à des fins d'apprentissage et de projets personnels.",
+    lang_label:"العربية",
+    status_idle:"", status_ready:f=>`${f} fichier(s) prêt(s)`,
+    status_converting:"Conversion en cours...", status_done:"Terminé ! PDF téléchargé.",
+    unsupported:"Ce type de fichier ne peut pas être converti dans le navigateur (nécessite un serveur).",
+    tag_ok:"PDF ✓", tag_na:"N/A",
+    menu_theme:"Thème", menu_language:"Langue",
+  },
+  es: {
+    page_title:"PDFify — Conversor de PDF 100% privado y local",
+    brand:"PDFify",
+    get_started:"Empezar", eyebrow:"100% privado — conversor de PDF local",
+    h1_1:"Convierte cualquier cosa", h1_2:"a", h1_pdf:"PDF",
+    hero_sub:"Convierte tus archivos en documentos PDF de alta calidad, rápido y con total seguridad, directamente en tu dispositivo.",
+    drop_title:"Arrastra y suelta tu archivo aquí", drop_or:"o", choose_file:"Elegir archivo",
+    support_line:"Compatible con: imágenes (JPG, PNG, WEBP) y texto plano (.txt) — convertido totalmente en tu navegador",
+    privacy_note:"🔒 Tus archivos se procesan localmente y nunca se envían a ningún servidor.",
+    convert_btn:"Convertir a PDF", any_file:"Cualquier archivo",
+    f1_title:"Seguro", f1_desc:"Tus archivos nunca salen de tu dispositivo — todo ocurre localmente.",
+    f2_title:"Rápido", f2_desc:"Convierte archivos en segundos, sin esperar a ningún servidor.",
+    f3_title:"Alta calidad", f3_desc:"Obtén PDF nítidos y de alta calidad cada vez.",
+    f4_title:"Cualquier dispositivo", f4_desc:"Funciona en cualquier dispositivo, en cualquier momento y lugar, directamente en el navegador.",
+    footer:"© 2026 PDFify. Creado con fines educativos y para proyectos personales.",
+    lang_label:"Español",
+    status_idle:"", status_ready:f=>`${f} archivo(s) listo(s)`,
+    status_converting:"Convirtiendo...", status_done:"¡Listo! PDF descargado.",
+    unsupported:"Este tipo de archivo no se puede convertir en el navegador (requiere un servidor).",
+    tag_ok:"PDF ✓", tag_na:"N/D",
+    menu_theme:"Tema", menu_language:"Idioma",
+  },
+  pt: {
+    page_title:"PDFify — Conversor de PDF 100% privado e local",
+    brand:"PDFify",
+    get_started:"Começar", eyebrow:"100% privado — conversor de PDF local",
+    h1_1:"Converta qualquer coisa", h1_2:"em", h1_pdf:"PDF",
+    hero_sub:"Converta seus arquivos em documentos PDF de alta qualidade, com rapidez e segurança, direto no seu dispositivo.",
+    drop_title:"Arraste e solte seu arquivo aqui", drop_or:"ou", choose_file:"Escolher arquivo",
+    support_line:"Suporta: imagens (JPG, PNG, WEBP) e texto simples (.txt) — convertido totalmente no seu navegador",
+    privacy_note:"🔒 Seus arquivos são processados localmente e nunca enviados a nenhum servidor.",
+    convert_btn:"Converter em PDF", any_file:"Qualquer arquivo",
+    f1_title:"Seguro", f1_desc:"Seus arquivos nunca saem do seu dispositivo — tudo acontece localmente.",
+    f2_title:"Rápido", f2_desc:"Converta arquivos em segundos, sem esperar por um servidor.",
+    f3_title:"Alta qualidade", f3_desc:"Obtenha PDFs nítidos e de alta qualidade sempre.",
+    f4_title:"Todos os dispositivos", f4_desc:"Funciona em qualquer dispositivo, a qualquer hora e lugar, direto no navegador.",
+    footer:"© 2026 PDFify. Criado para fins educacionais e projetos pessoais.",
+    lang_label:"Português",
+    status_idle:"", status_ready:f=>`${f} arquivo(s) pronto(s)`,
+    status_converting:"Convertendo...", status_done:"Pronto! PDF baixado.",
+    unsupported:"Este tipo de arquivo não pode ser convertido no navegador (requer um servidor).",
+    tag_ok:"PDF ✓", tag_na:"N/D",
+    menu_theme:"Tema", menu_language:"Idioma",
+  },
+  de: {
+    page_title:"PDFify — 100% privater, lokaler PDF-Konverter",
+    brand:"PDFify",
+    get_started:"Loslegen", eyebrow:"100% privat — lokaler PDF-Konverter",
+    h1_1:"Wandle alles um", h1_2:"in", h1_pdf:"PDF",
+    hero_sub:"Wandle deine Dateien schnell, einfach und sicher in hochwertige PDF-Dokumente um — direkt auf deinem Gerät.",
+    drop_title:"Datei hierher ziehen", drop_or:"oder", choose_file:"Datei auswählen",
+    support_line:"Unterstützt: Bilder (JPG, PNG, WEBP) und Klartext (.txt) — vollständig im Browser konvertiert",
+    privacy_note:"🔒 Deine Dateien werden lokal verarbeitet und nie an einen Server gesendet.",
+    convert_btn:"In PDF umwandeln", any_file:"Beliebige Datei",
+    f1_title:"Sicher", f1_desc:"Deine Dateien verlassen nie dein Gerät — alles geschieht lokal.",
+    f2_title:"Schnell", f2_desc:"Konvertiere Dateien in Sekunden — ohne auf einen Server zu warten.",
+    f3_title:"Hohe Qualität", f3_desc:"Erhalte jedes Mal scharfe, hochwertige PDFs.",
+    f4_title:"Alle Geräte", f4_desc:"Funktioniert auf jedem Gerät, jederzeit und überall — direkt im Browser.",
+    footer:"© 2026 PDFify. Für Lern- und Privatprojekte erstellt.",
+    lang_label:"Deutsch",
+    status_idle:"", status_ready:f=>`${f} Datei(en) bereit`,
+    status_converting:"Wird konvertiert...", status_done:"Fertig! PDF heruntergeladen.",
+    unsupported:"Dieser Dateityp kann im Browser nicht konvertiert werden (Server erforderlich).",
+    tag_ok:"PDF ✓", tag_na:"N/V",
+    menu_theme:"Design", menu_language:"Sprache",
+  },
+  zh: {
+    page_title:"PDFify — 100% 私密的本地 PDF 转换器",
+    brand:"PDFify",
+    get_started:"立即开始", eyebrow:"100% 私密 — 本地 PDF 转换器",
+    h1_1:"任意文件转换", h1_2:"为", h1_pdf:"PDF",
+    hero_sub:"快速、轻松、安全地将文件转换为高质量 PDF 文档 — 直接在您的设备上完成。",
+    drop_title:"将文件拖放到此处", drop_or:"或", choose_file:"选择文件",
+    support_line:"支持：图片（JPG、PNG、WEBP）和纯文本（.txt）— 完全在浏览器中转换",
+    privacy_note:"🔒 您的文件在本地处理，绝不会发送到任何服务器。",
+    convert_btn:"转换为 PDF", any_file:"任意文件",
+    f1_title:"安全", f1_desc:"您的文件永远不会离开您的设备 — 一切都在本地完成。",
+    f2_title:"快速", f2_desc:"几秒钟内完成转换 — 无需等待服务器。",
+    f3_title:"高质量", f3_desc:"每次都能获得清晰、高质量的 PDF。",
+    f4_title:"支持所有设备", f4_desc:"可在任何设备、任何时间、任何地点使用 — 直接在浏览器中运行。",
+    footer:"© 2026 PDFify。为学习和个人项目而创建。",
+    lang_label:"中文",
+    status_idle:"", status_ready:f=>`已就绪 ${f} 个文件`,
+    status_converting:"转换中...", status_done:"完成！PDF 已下载。",
+    unsupported:"此文件类型无法在浏览器中转换（需要服务器）。",
+    tag_ok:"PDF ✓", tag_na:"不支持",
+    menu_theme:"主题", menu_language:"语言",
+  },
+  ja: {
+    page_title:"PDFify — 100%プライベートなローカルPDF変換ツール",
+    brand:"PDFify",
+    get_started:"始める", eyebrow:"100%プライベート — ローカルPDF変換ツール",
+    h1_1:"あらゆるファイルを変換", h1_2:"", h1_pdf:"PDFへ",
+    hero_sub:"ファイルを高品質なPDF文書に、素早く、簡単に、安全に変換します — すべてお使いの端末上で完結します。",
+    drop_title:"ここにファイルをドラッグ＆ドロップ", drop_or:"または", choose_file:"ファイルを選択",
+    support_line:"対応形式：画像（JPG、PNG、WEBP）とプレーンテキスト（.txt）— ブラウザ内で完全に変換されます",
+    privacy_note:"🔒 ファイルはローカルで処理され、サーバーに送信されることは一切ありません。",
+    convert_btn:"PDFに変換", any_file:"あらゆるファイル",
+    f1_title:"安全", f1_desc:"ファイルが端末から出ることはありません — すべてローカルで処理されます。",
+    f2_title:"高速", f2_desc:"サーバーを待つことなく、数秒で変換できます。",
+    f3_title:"高品質", f3_desc:"毎回鮮明で高品質なPDFを取得できます。",
+    f4_title:"あらゆる端末に対応", f4_desc:"いつでもどこでも、あらゆる端末のブラウザ上で直接動作します。",
+    footer:"© 2026 PDFify。学習および個人プロジェクトのために作成。",
+    lang_label:"日本語",
+    status_idle:"", status_ready:f=>`${f} 件のファイルが準備完了`,
+    status_converting:"変換中...", status_done:"完了！PDFをダウンロードしました。",
+    unsupported:"このファイル形式はブラウザ内で変換できません（サーバーが必要です）。",
+    tag_ok:"PDF ✓", tag_na:"非対応",
+    menu_theme:"テーマ", menu_language:"言語",
   },
   ar: {
     page_title:"PDFify — حوّل أي ملف إلى PDF",
@@ -349,17 +574,19 @@ const translations = {
     hero_sub:"حوّل ملفاتك إلى مستندات PDF عالية الجودة، بسرعة وسهولة وأمان — مباشرة من جهازك.",
     drop_title:"اسحب وأفلت ملفك هنا", drop_or:"أو", choose_file:"اختر ملف",
     support_line:"يدعم: الصور (JPG, PNG, WEBP) وملفات نصية (.txt) — يتم التحويل بالكامل داخل متصفحك",
+    privacy_note:"🔒 تُعالَج ملفاتك محليا داخل متصفحك ولا تُرسل أبدا لأي سيرفر.",
     convert_btn:"حوّل إلى PDF", any_file:"أي ملف",
     f1_title:"آمن", f1_desc:"ملفاتك لا تغادر جهازك أبدا — كل شيء يتم محليا.",
     f2_title:"سريع", f2_desc:"حوّل ملفاتك في ثوان — بلا انتظار لأي سيرفر.",
     f3_title:"جودة عالية", f3_desc:"احصل على ملفات PDF واضحة وعالية الجودة في كل مرة.",
     f4_title:"كل الأجهزة", f4_desc:"يعمل على أي جهاز، في أي وقت ومكان — مباشرة من المتصفح.",
     footer:"© 2026 PDFify. تم إنشاؤه لأغراض تعليمية ومشاريع شخصية.",
-    lang_label:"English",
+    lang_label:"العربية",
     status_idle:"", status_ready:f=>`${f} ملف(ات) جاهزة`,
     status_converting:"جاري التحويل...", status_done:"تم! تم تحميل ملف PDF.",
     unsupported:"لا يمكن تحويل هذا النوع من الملفات داخل المتصفح (يحتاج سيرفر).",
     tag_ok:"PDF ✓", tag_na:"غير مدعوم",
+    menu_theme:"المظهر", menu_language:"اللغة",
   }
 };
 let currentLang = "en";
@@ -372,28 +599,103 @@ function applyLang(lang){
     if(dict[key] !== undefined) el.innerHTML = dict[key];
   });
   document.getElementById("langLabel").textContent = dict.lang_label;
+  document.getElementById("langLabelMobile").textContent = dict.lang_label;
   document.documentElement.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
   document.documentElement.setAttribute("lang", lang);
   document.title = dict.page_title;
   renderFileList();
+  renderLangMenu();
 }
 
-document.getElementById("langToggle").addEventListener("click", ()=>{
-  applyLang(currentLang === "en" ? "ar" : "en");
-});
+const LANGS = ["en","fr","es","pt","de","zh","ja","ar"];
+const LANG_NAMES = {
+  en:"English", fr:"Français", es:"Español", pt:"Português",
+  de:"Deutsch", zh:"中文", ja:"日本語", ar:"العربية"
+};
+
+const langMenu = document.getElementById("langMenu");
+const langOverlay = document.getElementById("langOverlay");
+
+function renderLangMenu(){
+  langMenu.innerHTML = LANGS.map(code => `
+    <button class="lang-option ${code === currentLang ? "active" : ""}" data-lang="${code}">
+      <span>${LANG_NAMES[code]}</span>${code === currentLang ? "✓" : ""}
+    </button>
+  `).join("");
+  langMenu.querySelectorAll(".lang-option").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const lang = btn.getAttribute("data-lang");
+      applyLang(lang);
+      try{ localStorage.setItem("pdfify-lang", lang); }catch(e){}
+      closeLangMenu();
+    });
+  });
+}
+
+function openLangMenu(){
+  langMenu.classList.add("open");
+  langOverlay.classList.add("open");
+}
+function closeLangMenu(){
+  langMenu.classList.remove("open");
+  langOverlay.classList.remove("open");
+}
+function toggleLangMenu(){
+  if(langMenu.classList.contains("open")) closeLangMenu();
+  else openLangMenu();
+}
+document.getElementById("langToggle").addEventListener("click", toggleLangMenu);
+document.getElementById("langToggleMobile").addEventListener("click", toggleLangMenu);
+langOverlay.addEventListener("click", closeLangMenu);
 
 document.getElementById("getStartedBtn").addEventListener("click", ()=>{
   dropzone.scrollIntoView({ behavior:"smooth", block:"center" });
 });
+document.getElementById("getStartedBtnMobile").addEventListener("click", ()=>{
+  mobilePanel.classList.remove("open");
+  dropzone.scrollIntoView({ behavior:"smooth", block:"center" });
+});
+
+/* ================= Mobile menu ================= */
+const hamburgerBtn = document.getElementById("hamburgerBtn");
+const mobilePanel = document.getElementById("mobilePanel");
+hamburgerBtn.addEventListener("click", ()=>{
+  mobilePanel.classList.toggle("open");
+  hamburgerBtn.textContent = mobilePanel.classList.contains("open") ? "✕" : "☰";
+});
 
 /* ================= Theme ================= */
-const themeBtn = document.getElementById("themeToggle");
-themeBtn.addEventListener("click", ()=>{
+function toggleTheme(){
   const html = document.documentElement;
   const isDark = html.getAttribute("data-theme") === "dark";
-  html.setAttribute("data-theme", isDark ? "light" : "dark");
-  themeBtn.textContent = isDark ? "🌙" : "☀️";
-});
+  const next = isDark ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  try{ localStorage.setItem("pdfify-theme", next); }catch(e){}
+  const icon = isDark ? "🌙" : "☀️";
+  themeBtn.textContent = icon;
+  themeToggleMobile.textContent = icon;
+}
+const themeBtn = document.getElementById("themeToggle");
+const themeToggleMobile = document.getElementById("themeToggleMobile");
+themeBtn.addEventListener("click", toggleTheme);
+themeToggleMobile.addEventListener("click", toggleTheme);
+// reflect the theme already applied by the early head script
+if(document.documentElement.getAttribute("data-theme") === "dark"){
+  themeBtn.textContent = "☀️";
+  themeToggleMobile.textContent = "☀️";
+}
+
+/* ================= Init: auto-detect language ================= */
+function detectInitialLang(){
+  try{
+    const saved = localStorage.getItem("pdfify-lang");
+    if(saved && LANGS.includes(saved)) return saved;
+  }catch(e){}
+  const nav = ((navigator.language || navigator.userLanguage || "en") + "").toLowerCase();
+  if(nav.startsWith("ar")) return "ar";
+  if(nav.startsWith("fr")) return "fr";
+  return "en";
+}
 
 /* ================= File handling ================= */
 const dropzone = document.getElementById("dropzone");
@@ -498,10 +800,12 @@ convertBtn.addEventListener("click", async ()=>{
       const y = (pageH - h) / 2;
       pdf.addImage(dataUrl, "JPEG", x, y, w, h);
     } else {
+      await ensureUnicodeFont(pdf);
       const text = await file.text();
       const lines = pdf.splitTextToSize(text, 500);
       pdf.setFontSize(11);
       pdf.text(lines, 40, 50);
+      pdf.setFont("helvetica");
     }
   }
 
@@ -509,6 +813,34 @@ convertBtn.addEventListener("click", async ()=>{
   statusText.textContent = dict.status_done;
   convertBtn.classList.add("active");
 });
+
+/* ================= Unicode font support for text -> PDF ================= */
+let unicodeFontReady = false;
+async function ensureUnicodeFont(pdf){
+  if(unicodeFontReady){ pdf.setFont("NotoSans"); return true; }
+  try{
+    const res = await fetch("https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf");
+    const buf = await res.arrayBuffer();
+    const base64 = arrayBufferToBase64(buf);
+    pdf.addFileToVFS("NotoSans-Regular.ttf", base64);
+    pdf.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
+    pdf.setFont("NotoSans");
+    unicodeFontReady = true;
+    return true;
+  }catch(e){
+    console.warn("Unicode font failed to load, falling back to default font", e);
+    return false;
+  }
+}
+function arrayBufferToBase64(buffer){
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const chunk = 0x8000;
+  for(let i = 0; i < bytes.length; i += chunk){
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
 
 function readFileAsDataURL(file){
   return new Promise((resolve,reject)=>{
@@ -526,8 +858,11 @@ function loadImage(src){
     img.src = src;
   });
 }
+
+/* ================= Init ================= */
+applyLang(detectInitialLang());
 </script>
 
 </body>
 </html>
-  
+
